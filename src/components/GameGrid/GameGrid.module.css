@@ -1,0 +1,51 @@
+.gameGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
+  gap: 1rem;
+}
+
+.gameGridItemImage {
+  border-radius: 4px;
+}
+
+.gameGridItem {
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  padding: 0.2rem;
+}
+
+.gameGridItem:hover {
+  background-color: #2d435d;
+}
+
+.gameGridItemTitle {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2em 0;
+}
+
+.gameGridItemLocation {
+  padding-top: .2em;
+}
+
+.gameGridItemTitle h1 {
+  all: unset;
+}
+
+.gameGridItemDetails {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: start;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.gameGridItemMore {
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-2);
+  user-select: none;
+}

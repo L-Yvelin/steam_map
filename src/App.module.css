@@ -1,0 +1,76 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  width: 100vw;
+
+  overflow: hidden;
+
+  gap: 1rem;
+}
+
+.main {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 1rem;
+  }
+}
+
+.error {
+  color: #f18484;
+  font-size: 0.8rem;
+  height: 0.8rem;
+  font-weight: bold;
+}
+
+.tabsContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tabContent {
+  flex: 1;
+  background-color: var(--background-3);
+  padding: 0.5rem;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
+
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.earthView {
+  max-height: 100%;
+  overflow: hidden;
+  padding: 0;
+  scrollbar-width: none;
+}
+
+.earthView::-webkit-scrollbar {
+  display: none;
+}
+
+.earth {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.hidden {
+  visibility: hidden;
+  height: 0;
+  max-height: 0;
+  overflow: hidden;
+}

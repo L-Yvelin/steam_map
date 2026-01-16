@@ -1,0 +1,11 @@
+.tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.tabsPadding {
+  height: 0.2rem;
+  width: 100%;
+  background-color: var(--background-2);
+}

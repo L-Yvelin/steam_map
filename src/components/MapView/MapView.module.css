@@ -1,0 +1,30 @@
+.mapView {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--background-3);
+}
+
+.mapWrapper {
+  width: 800px;
+  height: 400px;
+  cursor: grab;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.land {
+  fill: var(--background-4);
+  stroke: var(--background-2);
+  stroke-width: 0.5;
+  transition: fill 0.2s ease;
+}
+
+.land:hover {
+  fill: var(--text-accent-1);
+}

@@ -1,0 +1,11 @@
+.empty {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-2);
+  flex: 1;
+}

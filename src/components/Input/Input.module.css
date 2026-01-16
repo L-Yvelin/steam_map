@@ -1,0 +1,52 @@
+.inputContainer {
+  display: flex;
+  align-items: center;
+  height: 3rem;
+  background: #ffffff20;
+  width: 100%;
+}
+
+.inputWrapper {
+  height: 100%;
+  display: flex;
+  flex: 1;
+  border-radius: 2px 0px 0px 2px;
+  border: 1px solid #ffffff24;
+  box-sizing: border-box;
+}
+
+.input {
+  all: unset;
+  height: 100%;
+  color: var(--text-1);
+  flex: 1;
+  min-width: 0;
+  background-color: unset;
+  padding: 0 10px;
+}
+
+.input:focus {
+  border: 1px solid rgba(26, 160, 255, 0.39);
+}
+
+.mag {
+  aspect-ratio: 1;
+  height: 100%;
+  border-radius: 0px 1px 1px 0px;
+  background: #1a9fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.mag svg {
+  scale: 0.7;
+  transition: scale 0.1s ease-out;
+}
+
+.mag:hover svg {
+  scale: 0.8;
+}

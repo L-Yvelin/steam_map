@@ -1,0 +1,17 @@
+.tab {
+  all: unset;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background-color: var(--background-2);
+  cursor: pointer;
+}
+
+.tab:hover {
+  background-color: var(--background-3);
+}
+
+.tab:active,
+.active {
+  background-color: var(--background-3);
+}

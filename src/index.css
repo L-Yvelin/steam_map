@@ -1,0 +1,33 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:root {
+  font-family: "DINBold", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
+
+  --text-1: #ffffff;
+  --text-2: #dcdedf;
+
+  --text-accent-1: #1a9fff;
+  --text-accent-2: #66c0f4;
+
+  --background-1: #171d25;
+  --background-2: #1b2838;
+  --background-3: #233144;
+  --background-4: #2d435d;
+
+  background-color: var(--background-1);
+  color: var(--text-1);
+}
+
+@font-face {
+  font-family: DINBold;
+  src: url(/DINBold.otf);
+}
+
+@media (prefers-color-scheme: light) {
+}
