@@ -31,7 +31,6 @@ function App() {
   );
   const [ownedGames, setOwnedGames] = useState<OwnedGame[]>([]);
   const [games, setGames] = useState<SteamStoreAppDetailsData[] | null>(null);
-  const [loadingGames, setLoadingGames] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"earth" | "grid">("earth");
   const [locations, setLocations] = useState<string[]>([]);
@@ -100,11 +99,9 @@ function App() {
 
   useEffect(() => {
     if (ownedGames?.length > 0) {
-      setLoadingGames(true);
       ownedGames.slice(0, 2000).forEach((game) => {
         getAppDetails(game.appid).then(onAppDetails);
       });
-      setLoadingGames(false);
     }
   }, [ownedGames]);
 
@@ -144,7 +141,6 @@ function App() {
                 [classes.hidden]: view !== "grid",
               })}
               games={games}
-              loading={loadingGames}
               total={ownedGames.length}
             />
             <MapView

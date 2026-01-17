@@ -8,7 +8,6 @@ import Empty from "../Empty/Empty";
 
 interface GameGridProps extends React.HTMLAttributes<HTMLDivElement> {
   games: SteamStoreAppDetailsData[] | null;
-  loading: boolean;
   total: number;
 }
 
@@ -37,15 +36,10 @@ const GameLocation = ({ game }: { game: SteamStoreAppDetailsData }) => {
 
 const GameGrid = ({
   games,
-  loading,
   total,
   className,
   ...props
 }: GameGridProps) => {
-  if (loading) {
-    return <div className={classes.gameGridLoading}>Loading...</div>;
-  }
-
   if (games === null || games.length === 0) {
     return <Empty className={className} />;
   }
