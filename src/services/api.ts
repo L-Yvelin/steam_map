@@ -106,12 +106,53 @@ export const getAppDetails = async (
       });
 };
 
-export const getLocationFromGame = async (game: SteamStoreAppDetailsData) => {
-  const developers = game.developers;
+export interface GameLocation {
+  country: string;
+  region: string;
+}
 
-  const country = rows.find((row) =>
+export const getGameCountryRegion = (
+  game: SteamStoreAppDetailsData,
+): GameLocation => {
+  const developers = game.developers ?? "notagamedevelopper";
+
+  const matches = rows.find((row) =>
     row[6]?.toLowerCase().includes(developers[0]?.toLowerCase()),
-  )?.[10];
+  );
 
-  return country;
+  return {
+    country: matches?.[10] || "",
+    region: matches?.[7] || "",
+  };
+};
+
+interface NominatimResponse {
+  place_id: number;
+  licence: string;
+  osm_type: string;
+  osm_id: number;
+  lat: string;
+  lon: string;
+  class: string;
+  type: string;
+  place_rank: number;
+  importance: number;
+  addresstype: string;
+  name: string;
+  display_name: string;
+  boundingbox: [number, number, number, number];
+}
+
+export const getCoordinatesFromLocation = async (
+  location: GameLocation,
+): Promise<{ coordinates: [number, number] } | null> => {
+  const { country, region } = location;
+
+  const data: NominatimResponse = await fetchJson(
+    `/nominatim/search?q=${encodeURIComponent(country)}+${encodeURIComponent(region)}`,
+  );
+
+  return data.lat && data.lon
+    ? { coordinates: [parseFloat(data.lat), parseFloat(data.lon)] }
+    : null;
 };

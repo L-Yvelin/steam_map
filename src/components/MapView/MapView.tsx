@@ -1,5 +1,8 @@
 import classNames from "classnames";
-import type { SteamStoreAppDetailsData } from "../../types/SteamApi";
+import type {
+  SteamPlayerSummary,
+  SteamStoreAppDetailsData,
+} from "../../types/SteamApi";
 import classes from "./MapView.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Panzoom from "@panzoom/panzoom";
@@ -7,6 +10,7 @@ import Panzoom from "@panzoom/panzoom";
 interface MapViewProps extends React.HTMLAttributes<HTMLDivElement> {
   games: SteamStoreAppDetailsData[] | null;
   locations: string[] | null;
+  playerSummary: SteamPlayerSummary | null;
 }
 
 const project = (lambda: number, phi: number) => {
@@ -30,13 +34,19 @@ const renderPath = (geometry: any) => {
   return "";
 };
 
-const MapView = ({ games, locations, className, ...props }: MapViewProps) => {
+const MapView = ({
+  games,
+  locations,
+  playerSummary,
+  className,
+  ...props
+}: MapViewProps) => {
   const [geoJson, setGeoJson] = useState<any>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(
-      "https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson"
+      "https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson",
     )
       .then((res) => res.json())
       .then(setGeoJson);
@@ -94,6 +104,7 @@ const MapView = ({ games, locations, className, ...props }: MapViewProps) => {
       const normalized = loc.trim().toUpperCase();
       counts[normalized] = (counts[normalized] || 0) + 1;
     });
+    const playerLocation = playerSummary?.loccountrycode?.toUpperCase() || "";
 
     const maxCount = Math.max(...Object.values(counts), 0);
 
@@ -120,18 +131,22 @@ const MapView = ({ games, locations, className, ...props }: MapViewProps) => {
           d={renderPath(feature.geometry)}
           className={classes.land}
           style={
-            count > 0
-              ? ({
-                  fill: `rgba(255, 0, 0, ${0.3 + opacity * 0.7})`,
-                  stroke: "rgba(255, 255, 255, 0.5)",
-                  strokeWidth: 0.5,
-                } as React.CSSProperties)
-              : {}
+            iso2 === playerLocation
+              ? {
+                  fill: "rgba(0, 255, 0, 0.8)",
+                }
+              : count > 0
+                ? ({
+                    fill: `rgba(255, 0, 0, ${0.3 + opacity * 0.7})`,
+                    stroke: "rgba(255, 255, 255, 0.5)",
+                    strokeWidth: 0.5,
+                  } as React.CSSProperties)
+                : {}
           }
         />
       );
     });
-  }, [geoJson, locations]);
+  }, [geoJson, locations, playerSummary]);
 
   return (
     <div className={classNames(classes.mapView, className)} {...props}>

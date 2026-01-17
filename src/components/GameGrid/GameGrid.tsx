@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import type { SteamStoreAppDetailsData } from "../../types/SteamApi";
 import classes from "./GameGrid.module.css";
-import { getLocationFromGame } from "../../services/api";
+import { getGameCountryRegion } from "../../services/api";
 import { useEffect, useState } from "react";
 import * as Flags from "country-flag-icons/react/3x2";
 import Empty from "../Empty/Empty";
@@ -16,9 +16,8 @@ const GameLocation = ({ game }: { game: SteamStoreAppDetailsData }) => {
   const [isoCode, setIsoCode] = useState<string | null>(null);
 
   useEffect(() => {
-    getLocationFromGame(game).then((code) => {
-      setIsoCode(code ?? null);
-    });
+    const code = getGameCountryRegion(game);
+    setIsoCode(code.country ?? null);
   }, [game]);
 
   if (!isoCode) return null;

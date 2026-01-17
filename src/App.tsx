@@ -3,11 +3,16 @@ import classes from "./App.module.css";
 import {
   fold,
   getAppDetails,
-  getLocationFromGame,
+  getGameCountryRegion,
   getOwnedGames,
   getPlayerIdFromName,
+  getPlayerSummary,
 } from "./services/api";
-import type { OwnedGame, SteamStoreAppDetailsData } from "./types/SteamApi";
+import type {
+  OwnedGame,
+  SteamPlayerSummary,
+  SteamStoreAppDetailsData,
+} from "./types/SteamApi";
 import Header from "./components/Header/Header.component";
 import GameGrid from "./components/GameGrid/GameGrid";
 import Input from "./components/Input/Input";
@@ -21,6 +26,9 @@ import MapView from "./components/MapView/MapView";
 function App() {
   const [playerName, setPlayerName] = useState("");
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [playerSummary, setPlayerSummary] = useState<SteamPlayerSummary | null>(
+    null,
+  );
   const [ownedGames, setOwnedGames] = useState<OwnedGame[]>([]);
   const [games, setGames] = useState<SteamStoreAppDetailsData[] | null>(null);
   const [loadingGames, setLoadingGames] = useState(false);
@@ -30,11 +38,12 @@ function App() {
 
   const pushGame = (game: SteamStoreAppDetailsData) => {
     setGames((prev) => (prev ? [...prev, game] : [game]));
-    getLocationFromGame(game).then((loc: string | undefined) => {
-      if (loc) {
-        setLocations((prev) => [...prev, loc]);
+    if (game) {
+      const location = getGameCountryRegion(game);
+      if (location) {
+        setLocations((prev) => [...prev, location.country]);
       }
-    });
+    }
   };
 
   const onAppDetails = fold(() => {}, pushGame);
@@ -49,17 +58,30 @@ function App() {
   const searchPlayer = () => {
     resetState();
     setError(null);
-    /\d{17}/.test(playerName)
-      ? setPlayerId(playerName)
-      : getPlayerIdFromName(playerName).then(
-          fold(
-            (error) => {
-              setError(error);
-              resetState();
-            },
-            (playerId) => setPlayerId(playerId)
-          )
-        );
+    if (/\d{17}/.test(playerName)) {
+      setPlayerId(playerName);
+    } else {
+      getPlayerIdFromName(playerName).then(
+        fold(
+          (error) => {
+            setError(error);
+            resetState();
+          },
+          (playerId) => {
+            setPlayerId(playerId);
+            getPlayerSummary(playerId).then(
+              fold(
+                (error) => {
+                  setError(error);
+                  resetState();
+                },
+                (player) => setPlayerSummary(player),
+              ),
+            );
+          },
+        ),
+      );
+    }
   };
 
   useEffect(() => {
@@ -70,8 +92,8 @@ function App() {
             setError(error);
             resetState();
           },
-          (ownedGames) => setOwnedGames(ownedGames)
-        )
+          (ownedGames) => setOwnedGames(ownedGames),
+        ),
       );
     }
   }, [playerId]);
@@ -128,6 +150,7 @@ function App() {
             <MapView
               games={games}
               locations={locations}
+              playerSummary={playerSummary}
               className={classNames(classes.earth, {
                 [classes.hidden]: view !== "earth",
               })}
