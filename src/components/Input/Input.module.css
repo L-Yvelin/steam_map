@@ -4,6 +4,7 @@
   height: 3rem;
   background: #ffffff20;
   width: 100%;
+  flex: 0 0 auto;
 }
 
 .inputWrapper {
