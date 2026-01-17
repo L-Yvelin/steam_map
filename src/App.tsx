@@ -63,10 +63,6 @@ function App() {
   };
 
   useEffect(() => {
-    searchPlayer();
-  }, []);
-
-  useEffect(() => {
     if (playerId) {
       getOwnedGames(playerId).then(
         fold(

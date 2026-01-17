@@ -10,7 +10,7 @@ import type {
   SteamStoreAppDetailsData,
 } from "../types/SteamApi";
 
-const file = await fetch("./businesses_with_iso2.csv"); 
+const file = await fetch("./businesses_with_iso2.csv");
 const rows = Papa.parse<string>(await file.text(), {}).data;
 
 export type Result<E, A> =
@@ -39,49 +39,50 @@ const fetchJson = async <T>(input: RequestInfo | URL): Promise<T> => {
 };
 
 export const getPlayerIdFromName = async (
-  name: string
+  name: string,
 ): Promise<Result<string, string>> => {
   const data = await fetchJson<ResolveVanityURLResponse>(
     `/steam/ISteamUser/ResolveVanityURL/v0001/?vanityurl=${encodeURIComponent(
-      name
-    )}`
+      name,
+    )}`,
   );
   return data.response?.steamid
     ? success(data.response.steamid)
-    : error("No player found with this name");
+    : error("No player found, try its steam ID instead?");
 };
 
 export const getPlayerSummary = async (
-  steamId: string
+  steamId: string,
 ): Promise<Result<string, SteamPlayerSummary>> => {
   const data = await fetchJson<GetPlayerSummariesResponse>(
     `/steam/ISteamUser/GetPlayerSummaries/v0002/?steamids=${encodeURIComponent(
-      steamId
-    )}`
+      steamId,
+    )}`,
   );
+
   return data.response.players[0]
     ? success(data.response.players[0])
     : error("Error while trying to fetch player");
 };
 
 export const getOwnedGames = async (
-  steamId: string
+  steamId: string,
 ): Promise<Result<string, OwnedGame[]>> => {
   const data = await fetchJson<GetOwnedGamesResponse>(
     `/steam/IPlayerService/GetOwnedGames/v0001/?steamid=${encodeURIComponent(
-      steamId
-    )}&format=json&include_appinfo=0&include_played_free_games=1`
+      steamId,
+    )}&format=json&include_appinfo=0&include_played_free_games=1`,
   );
   return data.response.games
     ? success(data.response.games)
-    : error("Error while trying to fetch owned games");
+    : error("No games found, maybe the account is private?");
 };
 
 export const getAppList = async (): Promise<
   Result<string, GetAppListResponse>
 > => {
   const data = await fetchJson<GetAppListResponse>(
-    `/steam/ISteamApps/GetAppList/v0002/`
+    `/steam/ISteamApps/GetAppList/v0002/`,
   );
 
   return data.applist.apps
@@ -90,23 +91,26 @@ export const getAppList = async (): Promise<
 };
 
 export const getAppDetails = async (
-  appId: string | number
-): Promise<Result<string, SteamStoreAppDetailsData>> => {
+  appId: string | number,
+): Promise<Result<{ id: string; error: string }, SteamStoreAppDetailsData>> => {
   const id = String(appId);
   const data = await fetchJson<GetAppDetailsResponse>(
-    `/store/api/appdetails?appids=${encodeURIComponent(id)}`
+    `/store/api/appdetails?appids=${encodeURIComponent(id)}`,
   );
   const entry = data[id];
   return entry?.success && entry.data
     ? success(entry.data)
-    : error(`Error while trying to fetch app details for app ${id}`);
+    : error({
+        id,
+        error: `Error while trying to fetch app details for app ${id}`,
+      });
 };
 
 export const getLocationFromGame = async (game: SteamStoreAppDetailsData) => {
   const developers = game.developers;
 
   const country = rows.find((row) =>
-    row[6]?.toLowerCase().includes(developers[0]?.toLowerCase())
+    row[6]?.toLowerCase().includes(developers[0]?.toLowerCase()),
   )?.[10];
 
   return country;
