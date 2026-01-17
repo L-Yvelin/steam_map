@@ -34,11 +34,12 @@ async function fetchJsonWithCache(url: string, dir: string, fileName: string) {
     // identify the app for polite third-party API usage
     headers: { "User-Agent": "steam_map/1.0 (+https://example.invalid)" },
   });
-  const data = (await r.json()) as any;
+  const data = (await r.json()) as unknown;
   try {
     fs.writeFileSync(cachePath, JSON.stringify(data));
-  } catch (e) {
-    console.error("Cache write error:", e);
+  } catch (e: unknown) {
+    if (e instanceof Error) console.error("Cache write error:", e.message);
+    else console.error("Cache write error:", String(e));
   }
   return data;
 }
@@ -54,8 +55,9 @@ app.get("/store/api/appdetails", async (req: Request, res: Response) => {
     const url = `https://store.steampowered.com/api/appdetails?appids=${id}`;
     const data = await fetchJsonWithCache(url, STEAM_CACHE_DIR, `${id}.json`);
     return res.json(data);
-  } catch (e: any) {
-    return res.status(500).json({ error: e.message });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    return res.status(500).json({ error: message });
   }
 });
 
@@ -72,32 +74,37 @@ app.get("/nominatim/search", async (req: Request, res: Response) => {
   try {
     const data = await fetchJsonWithCache(url, LOCATION_CACHE_DIR, `${q}.json`);
     return res.json(data);
-  } catch (e: any) {
-    return res.status(500).json({ error: e.message });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    return res.status(500).json({ error: message });
   }
 });
 
 // Proxy User API
 app.get(/^\/steam\/(.*)/, async (req: Request, res: Response) => {
-  const query = new URLSearchParams(req.query as any);
+  const query = new URLSearchParams(req.query as Record<string, string>);
   if (STEAM_API_KEY) query.set("key", STEAM_API_KEY);
 
   try {
+    const pathPart = (req.params as Record<string, string>)[0] || "";
     const r = await fetch(
-      `https://api.steampowered.com/${req.params[0]}?${query}`,
+      `https://api.steampowered.com/${pathPart}?${query}`,
     );
     res.json(await r.json());
-  } catch (e: any) {
-    res.status(500).json({ error: e.message });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    res.status(500).json({ error: message });
   }
 });
 
 // SPA fallback
 app.get(/.*/, (req: Request, res: Response) => {
   const indexPath = path.join(__dirname, "dist", "index.html");
-  fs.existsSync(indexPath)
-    ? res.sendFile(indexPath)
-    : res.status(404).send("Run 'npm run build' first.");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send("Run 'npm run build' first.");
+  }
 });
 
 app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
