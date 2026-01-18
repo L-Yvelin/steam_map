@@ -8,6 +8,7 @@ import type {
   ResolveVanityURLResponse,
   SteamPlayerSummary,
   SteamStoreAppDetailsData,
+  SteamStoreAppDetailsEntry,
 } from "../types/SteamApi";
 
 const file = await fetch("./businesses_with_iso2.csv");
@@ -32,8 +33,11 @@ export const fold =
   (r: Result<E, A>): B =>
     r.tag === "error" ? onError(r.error) : onSuccess(r.value);
 
-const fetchJson = async <T>(input: RequestInfo | URL): Promise<T> => {
-  const res = await fetch(input);
+const fetchJson = async <T>(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<T> => {
+  const res = await fetch(input, init);
   if (!res.ok) throw new Error(String(res.status));
   return (await res.json()) as T;
 };
@@ -91,19 +95,33 @@ export const getAppList = async (): Promise<
 };
 
 export const getAppDetails = async (
-  appId: string | number,
-): Promise<Result<{ id: string; error: string }, SteamStoreAppDetailsData>> => {
-  const id = String(appId);
-  const data = await fetchJson<GetAppDetailsResponse>(
-    `/store/api/appdetails?appids=${encodeURIComponent(id)}`,
-  );
-  const entry = data[id];
-  return entry?.success && entry.data
-    ? success(entry.data)
-    : error({
-        id,
-        error: `Error while trying to fetch app details for app ${id}`,
-      });
+  appIds: number[],
+): Promise<Result<string, SteamStoreAppDetailsData[]>> => {
+  try {
+    const data = await fetchJson<GetAppDetailsResponse[]>(
+      `/store/api/appdetails`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(appIds),
+      },
+    );
+
+    function hasData(
+      entry: SteamStoreAppDetailsEntry,
+    ): entry is Extract<SteamStoreAppDetailsEntry, { success: true }> {
+      return entry.success === true;
+    }
+
+    const games = data
+      .map((app) => Object.values(app)[0])
+      .filter(hasData)
+      .map((entry) => entry.data);
+
+    return success(games);
+  } catch {
+    return error("Error while trying to fetch app details");
+  }
 };
 
 export interface GameLocation {

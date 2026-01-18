@@ -35,18 +35,6 @@ function App() {
   const [view, setView] = useState<"earth" | "grid">("earth");
   const [locations, setLocations] = useState<string[]>([]);
 
-  const pushGame = (game: SteamStoreAppDetailsData) => {
-    setGames((prev) => (prev ? [...prev, game] : [game]));
-    if (game) {
-      const location = getGameCountryRegion(game);
-      if (location) {
-        setLocations((prev) => [...prev, location.country]);
-      }
-    }
-  };
-
-  const onAppDetails = fold(() => {}, pushGame);
-
   const resetState = () => {
     setPlayerId(null);
     setOwnedGames([]);
@@ -99,9 +87,15 @@ function App() {
 
   useEffect(() => {
     if (ownedGames?.length > 0) {
-      ownedGames.slice(0, 2000).forEach((game) => {
-        getAppDetails(game.appid).then(onAppDetails);
-      });
+      getAppDetails(ownedGames.map((game) => game.appid)).then(
+        fold(
+          (error) => {
+            setError(error);
+            resetState();
+          },
+          (games) => setGames(games),
+        ),
+      );
     }
   }, [ownedGames]);
 
