@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import FetchCached from "./FetchCached";
+import z from "zod";
 
 dotenv.config({ quiet: true });
 
@@ -53,22 +54,35 @@ app.post("/store/api/appdetails", async (req: Request, res: Response) => {
         .fetch({
           input: url,
           fileName: `${id}.json`,
+          schema: z.object({
+            success: z.literal(true),
+            data: z.object({
+              name: z.string(),
+              steam_appid: z.number(),
+              capsule_image: z.string(),
+              developers: z.array(z.string()),
+            }),
+          }),
         })
         .then((r) => r.json());
 
       const entry = data[id];
 
-      games.push({
-        [id]: {
-          success: true,
-          data: {
-            name: entry.data.name,
-            steam_appid: entry.data.steam_appid,
-            capsule_image: entry.data.capsule_image,
-            developers: entry.data.developers,
+      if (data && data[id].success === true) {
+        games.push({
+          [id]: {
+            success: true,
+            data: {
+              name: entry.data.name,
+              steam_appid: entry.data.steam_appid,
+              capsule_image: entry.data.capsule_image,
+              developers: entry.data.developers,
+            },
           },
-        },
-      });
+        });
+      } else {
+        games.push({ [id]: { success: false } });
+      }
     } catch (e) {
       console.error(`Error fetching data for appid ${id}:`, e);
       games.push({ [id]: { success: false } });

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import z from "zod";
 
 type FetchCachedProps = {
   cacheSavingPath: string;
@@ -10,6 +11,7 @@ type FetchCachedProps = {
 type cachedFetchFunction = {
   input: string | URL | globalThis.Request;
   fileName: string;
+  schema: z.ZodType;
   init?: RequestInit | undefined;
 };
 
@@ -19,7 +21,6 @@ class FetchCached {
 
   in429 = false;
   timeoutMs = 0;
-  response429: BodyInit | null = null;
 
   constructor({
     baseUrl,
@@ -35,6 +36,7 @@ class FetchCached {
     input,
     fileName,
     init,
+    schema,
   }: cachedFetchFunction): Promise<Response> => {
     const cachedPath = path.resolve(this.cacheSavingPath, fileName);
 
@@ -58,7 +60,6 @@ class FetchCached {
       if (!result.ok) {
         if (result.status === 429) {
           console.warn("We're in 429 rate limit boys!");
-          this.response429 = result.body;
           this.in429 = true;
 
           setTimeout(() => {
@@ -68,14 +69,22 @@ class FetchCached {
         }
       } else {
         const data = await result.clone().json();
-        fs.writeFile(cachedPath, JSON.stringify(data), (e) => {
-          if (e) console.error(e);
-        });
+
+        if (data && schema.safeParse(data).success) {
+          fs.writeFile(cachedPath, JSON.stringify(data), (e) => {
+            if (e) console.error(e);
+          });
+          console.warn("Valid data, caching file:", fileName);
+        } else {
+          console.warn("We're in 429 rate limit boys!");
+          this.in429 = true;
+          console.warn("Invalid data, not caching file:", fileName);
+        }
       }
 
       return result;
     } else {
-      return new Response(this.response429!);
+      return new Response(JSON.stringify({ status: 429, success: false }));
     }
   };
 }
