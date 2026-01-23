@@ -32,6 +32,24 @@ class FetchCached {
     this.timeoutMs = timeoutMs;
   }
 
+  private handle429 = async (result: Response) => {
+    this.in429 = true;
+    console.warn("We're in 429 rate limit boys!");
+
+    const retryAfter = result.headers.get("Retry-After");
+    if (retryAfter) {
+      console.log("Retry-After", retryAfter);
+      this.timeoutMs = Number.parseInt(retryAfter) * 1000;
+    } else {
+      console.log("No Retry-After, using default timeout:", this.timeoutMs);
+    }
+
+    setTimeout(() => {
+      this.in429 = false;
+      console.warn("K, we're good for now...");
+    }, this.timeoutMs);
+  };
+
   public fetch = async ({
     input,
     fileName,
@@ -48,7 +66,7 @@ class FetchCached {
       }
     }
 
-    if (!this.in429) {
+    if (this.in429 === false) {
       if (typeof input === "string") {
         if (this.baseUrl) {
           input = this.baseUrl + input;
@@ -57,15 +75,9 @@ class FetchCached {
 
       const result = await fetch(input, init);
 
-      if (!result.ok) {
+      if (result.ok === false) {
         if (result.status === 429) {
-          console.warn("We're in 429 rate limit boys!");
-          this.in429 = true;
-
-          setTimeout(() => {
-            this.in429 = false;
-            console.warn("K, we're good for now...");
-          }, this.timeoutMs);
+          this.handle429(result);
         }
       } else {
         const data = await result.clone().json();
@@ -76,9 +88,8 @@ class FetchCached {
           });
           console.warn("Valid data, caching file:", fileName);
         } else {
-          console.warn("We're in 429 rate limit boys!");
-          this.in429 = true;
           console.warn("Invalid data, not caching file:", fileName);
+          this.handle429(result);
         }
       }
 
