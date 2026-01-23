@@ -5,16 +5,22 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import FetchCached from "./FetchCached";
 import z from "zod";
+import { getCountryCode } from "./countryMatcher";
 
 dotenv.config({ quiet: true });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
-// const LOCATION_CACHE_DIR = path.resolve(".cache/location");
+const LOCATION_CACHE_DIR = path.resolve(".cache/location");
 const STEAM_CACHE_DIR = path.resolve(".cache/steam");
 const STEAM_API_KEY =
   process.env.STEAM_API_KEY || process.env.VITE_STEAM_API_KEY;
+
+const nominatimFetchWithCache = new FetchCached({
+  cacheSavingPath: LOCATION_CACHE_DIR,
+  baseUrl: "https://nominatim.openstreetmap.org/search",
+});
 
 const steamFetchWithCache = new FetchCached({
   cacheSavingPath: STEAM_CACHE_DIR,
@@ -68,7 +74,7 @@ app.post("/store/api/appdetails", async (req: Request, res: Response) => {
 
       const entry = data[id];
 
-      if (data && data[id].success === true) {
+      if (data && data[id]?.success === true) {
         games.push({
           [id]: {
             success: true,
@@ -92,24 +98,51 @@ app.post("/store/api/appdetails", async (req: Request, res: Response) => {
   return res.json(games);
 });
 
-// app.get("/nominatim/search", async (req: Request, res: Response) => {
-//   const q = req.query.q as string;
-//   if (!q) return res.status(400).json({ error: "q (query) is required" });
+app.post("/location/search", async (req: Request, res: Response) => {
+  const appIds = Array.isArray(req.body) ? req.body.map(String) : [];
+  if (appIds.length === 0) {
+    return res.status(400).json({ error: "appIds required" });
+  }
 
-//   const params = new URLSearchParams({
-//     q,
-//     format: (req.query.format as string) || "json",
-//   });
-//   const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+  const locations: {
+    appId: string;
+    location: { latitude: string; longitude: string } | null;
+  }[] = [];
 
-//   try {
-//     const data = await fetchJsonWithCache(url, LOCATION_CACHE_DIR, `${q}.json`);
-//     return res.json(data);
-//   } catch (e: unknown) {
-//     const message = e instanceof Error ? e.message : String(e);
-//     return res.status(500).json({ error: message });
-//   }
-// });
+  for (const id of appIds) {
+    const url = `search?appids=${encodeURIComponent(id)}`;
+
+    try {
+      const data = await nominatimFetchWithCache
+        .fetch({
+          input: url,
+          fileName: `${id}.json`,
+          schema: z.any(),
+        })
+        .then((r) => r.json())
+        .then((location) => ({
+          latitude: location.lat,
+          longitude: location.lon,
+        }));
+
+      locations.push({ appId: id, location: data });
+    } catch (e) {
+      console.error(`Error fetching data for appid ${id}:`, e);
+      locations.push({ appId: id, location: null });
+    }
+  }
+
+  return res.json(locations);
+});
+
+app.get("/devIso2", (req: Request, res: Response) => {
+  const developerName = req.query.developerName as string;
+  if (!developerName)
+    return res.status(400).json({ error: "developerName required" });
+
+  const iso2 = getCountryCode(developerName);
+  return res.json({ iso2 });
+});
 
 // Proxy User API
 app.get(/^\/steam\/(.*)/, async (req: Request, res: Response) => {
