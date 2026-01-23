@@ -13,6 +13,7 @@
   flex-direction: column;
   border-radius: 4px;
   padding: 0.2rem;
+  word-break: break-word;
 }
 
 .gameGridItem:hover {
@@ -26,7 +27,7 @@
 }
 
 .gameGridItemLocation {
-  padding-top: .2em;
+  padding-top: 0.2em;
 }
 
 .gameGridItemTitle h1 {

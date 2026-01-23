@@ -1,5 +1,5 @@
-import Papa from "papaparse";
 import type {
+  GameLocation,
   GetAppDetailsResponse,
   GetAppListResponse,
   GetOwnedGamesResponse,
@@ -10,9 +10,6 @@ import type {
   SteamStoreAppDetailsData,
   SteamStoreAppDetailsEntry,
 } from "../types/SteamApi";
-
-const file = await fetch("./businesses_with_iso2.csv");
-const rows = Papa.parse<string>(await file.text(), {}).data;
 
 export type Result<E, A> =
   | { tag: "error"; error: E }
@@ -124,23 +121,18 @@ export const getAppDetails = async (
   }
 };
 
-export interface GameLocation {
-  country: string;
-  region: string;
-}
-
-export const getGameCountryRegion = (
+export const getGameCountryRegion = async (
   game: SteamStoreAppDetailsData,
-): GameLocation => {
-  const developers = game.developers ?? "notagamedevelopper";
-
-  const matches = rows.find((row) =>
-    row[6]?.toLowerCase().includes(developers[0]?.toLowerCase()),
+): Promise<GameLocation> => {
+  const data = await fetchJson<{ iso2: string }>(
+    `/devIso2?developerName=${encodeURIComponent(game.developers?.[0] ?? "")}`,
   );
 
+  console.log(data);
+
   return {
-    country: matches?.[10] || "",
-    region: matches?.[7] || "",
+    country: data.iso2 ?? "",
+    region: "",
   };
 };
 
@@ -167,7 +159,9 @@ export const getCoordinatesFromLocation = async (
   const { country, region } = location;
 
   const data: NominatimResponse = await fetchJson(
-    `/nominatim/search?q=${encodeURIComponent(country)}+${encodeURIComponent(region)}`,
+    `/nominatim/search?q=${encodeURIComponent(country)}+${encodeURIComponent(
+      region,
+    )}`,
   );
 
   return data.lat && data.lon

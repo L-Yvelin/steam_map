@@ -3,7 +3,6 @@ import classes from "./App.module.css";
 import {
   fold,
   getAppDetails,
-  getGameCountryRegion,
   getOwnedGames,
   getPlayerIdFromName,
   getPlayerSummary,

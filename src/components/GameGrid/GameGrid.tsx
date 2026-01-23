@@ -15,8 +15,7 @@ const GameLocation = ({ game }: { game: SteamStoreAppDetailsData }) => {
   const [isoCode, setIsoCode] = useState<string | null>(null);
 
   useEffect(() => {
-    const code = getGameCountryRegion(game);
-    setIsoCode(code.country ?? null);
+    getGameCountryRegion(game).then((code) => setIsoCode(code.country ?? null));
   }, [game]);
 
   if (!isoCode) return null;
@@ -34,12 +33,7 @@ const GameLocation = ({ game }: { game: SteamStoreAppDetailsData }) => {
   );
 };
 
-const GameGrid = ({
-  games,
-  total,
-  className,
-  ...props
-}: GameGridProps) => {
+const GameGrid = ({ games, total, className, ...props }: GameGridProps) => {
   if (games === null || games.length === 0) {
     return <Empty className={className} />;
   }

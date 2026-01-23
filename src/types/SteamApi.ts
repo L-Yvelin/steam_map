@@ -222,5 +222,17 @@ export type SteamStoreAppDetailsEntry =
       success: false;
     };
 
-export type GetAppDetailsResponse = Record<string, SteamStoreAppDetailsEntry>;
+export interface GameLocation {
+  country: string;
+  region: string;
+}
 
+export type SimpleSteamGame = {
+  name: string;
+  steam_appid: number;
+  capsule_image: string;
+  developers: string[];
+  location: GameLocation | null;
+};
+
+export type GetAppDetailsResponse = Record<string, SteamStoreAppDetailsEntry>;
