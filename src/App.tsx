@@ -92,7 +92,25 @@ function App() {
             setError(error);
             resetState();
           },
-          (games) => setGames(games),
+          (games) => {
+            setGames(games);
+            // uniq count
+            console.log(
+              games
+                .reduce((acc, game) => {
+                  game.developers?.forEach((developer) => {
+                    const existing = acc.find(([name]) => name === developer);
+                    if (existing) {
+                      existing[1] = existing[1] + 1;
+                    } else {
+                      acc.push([developer, 1]);
+                    }
+                  });
+                  return acc;
+                }, [] as [string, number][])
+                .sort((a, b) => b[1] - a[1]),
+            );
+          },
         ),
       );
     }
